@@ -1,4 +1,4 @@
-int sensorPin = A7;  // Määritetään sensorin pinni (analoginen pinni A4)
+int sensorPin = A4;  // Määritetään sensorin pinni (analoginen pinni A4)
 int ledPin = 9;      // Määritetään LEDin pinni (digitaalinen pinni 9)
 int sensorValue = 0; // Alustetaan sensorin arvo
 int val;             // Väliaikainen muuttuja ADC-lukemille
@@ -27,10 +27,9 @@ void loop()
 void ADC_init()
 {
     // rekisteriasetukset
-    // Asetetaan referenssijännite ja ADC-muunnoskanava
-    ADMUX |= (1 << REFS0) | (1 << MUX2) | (1 << MUX1) | (1 << MUX0);
-    ADCSRA |= (1 << ADEN); // Aktivoidaan ADC
-    ADCSRB = 0x00;         // Asetetaan ADCSRB rekisteri nolliksi
+    ADMUX |= (1 << REFS0) | (1 << MUX2); // Asetetaan referenssijännite ja ADC-muunnoskanava
+    ADCSRA |= (1 << ADEN);               // Aktivoidaan ADC
+    ADCSRB = 0x00;                       // Asetetaan ADCSRB rekisteri nolliksi
 }
 
 uint16_t ADC_read(uint8_t ch)
@@ -38,7 +37,7 @@ uint16_t ADC_read(uint8_t ch)
     // aloitetaan muunnos
     ADCSRA |= (1 << ADSC); // Käynnistetään ADC-muunnos
 
-    while (ADCSRA & B01000000) // Odotetaan, että muunnos on valmis
+    while (ADCSRA & B00001000) // Odotetaan, että muunnos on valmis
     {
         ;
     }
