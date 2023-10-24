@@ -1,47 +1,36 @@
-// Polling Timer/Counter2 Overflow
-// The code snippet utilizes Timer/Counter2 overflow interrupt to toggle an LED.
-
-// LED connected to digital pin 13
 const int ledPin = 13;
-// Initial LED state (ON)
 byte ledState = HIGH;
-// Counter for overflow events
 int count = 0;
 
 void setup()
 {
-    // Set the LED pin as an output
     pinMode(ledPin, OUTPUT);
 
-    // Initialize Timer/Counter2 value to 0
-    TCNT2 = 0x00;
-    // Clear Timer/Counter Control Register A
-    TCCR2A = 0x00;
-    // Set clock prescaler
-    TCCR2B |= (1 << CS22) | (1 << CS21) | (1 << CS20);
-    // Clear the Timer/Counter2 Overflow Flag
-    TIFR2 |= (1 << TOV2);
+    // Aseta Timer/Counter1 laskuriarvoksi 0
+    TCNT1 = 0x0000;
+    // Aseta normaali toimintatila
+    TCCR1A = 0x00;
+    // Aseta kellotaajuus prescaler-arvoksi 1024
+    TCCR1B = (1 << CS12) | (0 << CS11) | (1 << CS10);
+    // Tyhjennetään TIFR1 OCF1A ja OCF1B
+    TIFR1 = (1 << OCF1A) | (1 << OCF1B);
+    // Tyhjennä ylivuotolippu
+    TIFR1 = (1 << TOV1);
 }
 
 void loop()
 {
-    // Check if Timer/Counter2 Overflow Flag is set
-    if (TIFR2 & B001)
+    // Tarkista onko Timer/Counter1:n ylivuotolippu asetettu
+    if ((TIFR1 & B1) == true)
     {
-        // Increment overflow counter
         count++;
-        // Clear the overflow flag
-        TIFR2 = (1 << TOV2);
+        // Tyhjennä ylivuotolippu
+        TIFR1 = (1 << TOV1);
     }
-
-    // If 50 overflows have occurred
     if (count == 50)
     {
-        // Toggle LED state
         ledState = !ledState;
-        // Update LED state
         digitalWrite(ledPin, ledState);
-        // Reset overflow counter
         count = 0;
     }
 }
