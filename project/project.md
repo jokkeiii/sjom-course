@@ -19,10 +19,10 @@ View 1:
 -   main clock (real time)
 
 View 2:
--   secondary clock/timer
+-   timer
 -   when timer goes to 0, vibration motor goes off
 
 View 3:
 -   setup screen
--   change clock 1
+-   change timer
 -   read eeprom
