@@ -3,6 +3,7 @@ float output;
 
 void setup() {
   pinMode(5, OUTPUT);
+  pinMode(A0, INPUT);
   Serial.begin(9600);
 }
 
