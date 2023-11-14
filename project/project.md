@@ -5,6 +5,7 @@ Saatavilla:
 -	lcd-screen
 -	vibration motor
 -	capacitive touch sensor
+
 Tilattava:
 -	RTC-module
 
