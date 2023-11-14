@@ -13,10 +13,10 @@ void loop() {
   output = (adc_value * 5.0) / 1023.0;
   input = 5;
   Serial.print("Input:");
-  Serial.println(input);
-  // Serial.print(",");
-  // Serial.print("Output:");
-  // Serial.println(adc_value);
+  Serial.print(input);
+  Serial.print(",");
+  Serial.print("Output:");
+  Serial.println(output);
 
   digitalWrite(5, LOW);
   delay(500);
@@ -24,8 +24,8 @@ void loop() {
   output = (adc_value * 5.0) / 1023.0;
   input = 0;
   Serial.print("Input:");
-  Serial.println(input);
-  // Serial.print(",");
-  // Serial.print("Output:");
-  // Serial.println(adc_value);
+  Serial.print(input);
+  Serial.print(",");
+  Serial.print("Output:");
+  Serial.println(output);
 }
