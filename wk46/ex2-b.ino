@@ -24,6 +24,7 @@ void loop() {
   adc_value = analogRead(A0);
   output = (adc_value * 5.0) / 1023.0;
   // print the values
+  // output should be around 3.15V
   Serial.println("1 tau");
   Serial.print("Input: ");
   Serial.print(input);
@@ -38,6 +39,7 @@ void loop() {
   adc_value = analogRead(A0);
   output = (adc_value * 5.0) / 1023.0;
 
+  // output should be around 4.3V
   Serial.println("2 tau");
   Serial.print("Input: ");
   Serial.print(input);
@@ -52,6 +54,7 @@ void loop() {
   adc_value = analogRead(A0);
   output = (adc_value * 5.0) / 1023.0;
 
+  // output should be around 4.75V
   Serial.println("3 tau");
   Serial.print("Input: ");
   Serial.print(input);
