@@ -4,13 +4,6 @@
 String eepromMessage = "Tekijät: Arif, Henri ja Joakim";
 int address = 0;
 
-// values saved in eeprom should never exceed 500 bytes
-const int eeprom_size = 500; 
-char eeprom_buffer[eeprom_size];
-
-char first_eeprom_value;
-
-
 void setup() {
 
     Serial.begin(9600); // serial communication initialize
@@ -18,7 +11,17 @@ void setup() {
     ; // wait for serial port to connect. Needed for native USB
     }
 
-    EEPROM.put(address, eepromMessage);
+    // Read the stored value from EEPROM
+    int storedValue = EEPROM.read(address);
+    // Check if EEPROM has data
+    if (storedValue == 255) {
+        Serial.println("EEPROM is empty.");
+        EEPROM.put(address, eepromMessage);
+        Serial.println("String '" + eepromMessage  + "' stored successfully.");
+    } else {
+        EEPROM.get(address, eepromMessage);
+        Serial.println(eepromMessage);
+    }
 }
 
 void loop() {
