@@ -1,8 +1,8 @@
-// Variables for adc value, input, and output
+// Variables for adc value, input and output voltages
 int adc_value, input;
 float output;
 
-//Variable for tau
+// Variable for tau, 100 ms
 int t = 100;
 
 void setup() {
@@ -24,7 +24,7 @@ void loop() {
 
   // Read the analog value from pin A0 and store it in the variable adc_value
   adc_value = analogRead(A0);
-  // Convert the ADC value to voltage using a formula and store it in the output variable
+  // Convert the ADC value to voltage and store it in the output
   output = (adc_value * 5.0) / 1023.0;
 
   Serial.print("Output:");
@@ -38,7 +38,7 @@ void loop() {
 
     // Read the analog value from pin A0 and store it in the variable adc_value
     adc_value = analogRead(A0);
-    // Convert the ADC value to voltage using a formula and store it in the output variable
+    // Convert the ADC value to voltage and store it in the output
     output = (adc_value * 5.0) / 1023.0;
 
     Serial.print("Output:");
@@ -61,7 +61,8 @@ void loop() {
 
   // Read the analog value from pin A0 again
   adc_value = analogRead(A0);
-  // Convert the ADC value to voltage using the formula and store it in the output variable
+  // Convert the ADC value to voltage using the formula and store it in the
+  // output variable
   output = (adc_value * 5.0) / 1023.0;
 
   // Set input to 0v
