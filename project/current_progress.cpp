@@ -1,4 +1,5 @@
 #include "PCF85063TP.h"
+#include <EEPROM.h>
 #include <Keypad.h>
 #include <LiquidCrystal_I2C.h>
 #include <Wire.h>
@@ -32,11 +33,13 @@ byte colPins[COLS] = {12, 11, 10, 9}; // connect to the column pinouts of the
 Keypad customKeypad =
     Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
 
-int touch_sensor_pin = 2;
+int touch_sensor_pin = 2, eeprom_address = 0;
 
 void instructionsView();
 void lcdPrintTime();
 void stopTimer();
+void countdownTimer();
+void readEeprom();
 
 void setup() {
   Serial.begin(115200);
@@ -92,9 +95,10 @@ void loop() {
   case '#':
     countdownTimer();
     break;
+  case 'A':
+    readEeprom();
+    break;
   default:
-    lcd.setCursor(0, 0);
-    lcd.print(" Time now from RTC: ");
     lcdPrintTime();
     break;
   }
@@ -102,6 +106,9 @@ void loop() {
 
 // Function: Display time on the lcd
 void lcdPrintTime() {
+  lcd.setCursor(0, 0);
+  lcd.print(" Time now from RTC: ");
+
   clock.getTime();
 
   lcd.setCursor(0, 1);
@@ -197,5 +204,32 @@ void countdownTimer() {
 
   lcd.print("  Countdown timer:  ");
   lcd.setCursor(0, 1);
-  lcd.print()
+  // lcd.print()
+}
+
+void readEeprom() {
+  String eeprom_message;
+  int colon_pos = 0;
+
+  EEPROM.get(eeprom_address, eeprom_message);
+
+  Serial.println(eeprom_message);
+
+  lcd.clear();
+  lcd.home();
+  lcd.print(eeprom_message);
+
+  // colon_pos = eeprom_message.indexOf(":");
+
+  // if (colon_pos > -1) {
+  //   lcd.clear();
+  //   lcd.home();
+  //   lcd.print(eeprom_message);
+
+  //   String line_2 = eeprom_message.substring(colon_pos + 1);
+
+  //   lcd.setCursor(0, 1);
+  //   lcd.print(line_2);
+  // }
+  delay(5000);
 }
