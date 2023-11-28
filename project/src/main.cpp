@@ -1,4 +1,5 @@
 #include "PCF85063TP.h"
+#include <EEPROM.h>
 #include <Keypad.h>
 #include <LiquidCrystal_I2C.h>
 #include <Wire.h>
@@ -29,14 +30,19 @@ byte colPins[COLS] = {12, 11, 10, 9}; // connect to the column pinouts of the
                                       // keypad
 
 // initialize an instance of class NewKeypad
-Keypad customKeypad =
+Keypad custom_keypad =
     Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
 
-int touch_sensor_pin = 2;
+int touch_sensor_pin = 2, eeprom_address = 0;
+char custom_key;
+int countdown_time = 0;
 
 void instructionsView();
-void lcdPrintTime();
+char lcdPrintTime();
 void stopTimer();
+char countdownTimer();
+char readEeprom();
+char setupScreen();
 
 void setup() {
   Serial.begin(115200);
@@ -79,93 +85,106 @@ void setup() {
   }
 
   // show instruction screen
+  // custom_key = instructionsView();
   instructionsView();
 }
 
 void loop() {
-  char custom_key = customKeypad.getKey();
-
   switch (custom_key) {
-  case '*':
-    Serial.println("Screen change!");
+  case 'A':
+    custom_key = lcdPrintTime();
     break;
-  case '#':
-    countdownTimer();
+  case 'B':
+    custom_key = countdownTimer();
+    break;
+  case 'C':
+    custom_key = setupScreen();
+    break;
+  case 'D':
+    custom_key = readEeprom();
     break;
   default:
-    lcd.setCursor(0, 0);
-    lcd.print(" Time now from RTC: ");
-    lcdPrintTime();
+    custom_key = custom_keypad.getKey();
     break;
   }
 }
 
 // Function: Display time on the lcd
-void lcdPrintTime() {
-  clock.getTime();
+char lcdPrintTime() {
+  while (true) {
+    lcd.setCursor(0, 0);
+    lcd.print(" Time now from RTC: ");
 
-  lcd.setCursor(0, 1);
-  lcd.print("      ");
-  // leading zero if number is under 10
-  if (clock.hour < 10) {
-    lcd.print("0");
+    clock.getTime();
+
+    lcd.setCursor(0, 1);
+    lcd.print("      ");
+    // leading zero if number is under 10
+    if (clock.hour < 10) {
+      lcd.print("0");
+    }
+    lcd.print(clock.hour, DEC);
+    lcd.print(":");
+
+    // leading zero if number is under 10
+    if (clock.minute < 10) {
+      lcd.print("0");
+    }
+    lcd.print(clock.minute, DEC);
+    lcd.print(":");
+
+    // leading zero if number is under 10
+    if (clock.second < 10) {
+      lcd.print("0");
+    }
+    lcd.print(clock.second, DEC);
+    lcd.print("      ");
+
+    lcd.setCursor(0, 2);
+    lcd.print("     ");
+    lcd.print(clock.month, DEC);
+    lcd.print("/");
+    lcd.print(clock.dayOfMonth, DEC);
+    lcd.print("/");
+    lcd.print(clock.year + 2000, DEC);
+    lcd.print("     ");
+
+    lcd.setCursor(0, 3);
+    lcd.print("< D    ");
+    lcd.print(clock.dayOfMonth);
+    lcd.print("*");
+
+    switch (clock.dayOfWeek) // Friendly printout the weekday
+    {
+    case MON:
+      lcd.print("MON");
+      break;
+    case TUE:
+      lcd.print("TUE");
+      break;
+    case WED:
+      lcd.print("WED");
+      break;
+    case THU:
+      lcd.print("THU");
+      break;
+    case FRI:
+      lcd.print("FRI");
+      break;
+    case SAT:
+      lcd.print("SAT");
+      break;
+    case SUN:
+      lcd.print("SUN");
+      break;
+    }
+    lcd.print("    B >");
+
+    char exit_char = custom_keypad.getKey();
+    if (exit_char) {
+      return exit_char;
+    }
   }
-  lcd.print(clock.hour, DEC);
-  lcd.print(":");
-
-  // leading zero if number is under 10
-  if (clock.minute < 10) {
-    lcd.print("0");
-  }
-  lcd.print(clock.minute, DEC);
-  lcd.print(":");
-
-  // leading zero if number is under 10
-  if (clock.second < 10) {
-    lcd.print("0");
-  }
-  lcd.print(clock.second, DEC);
-  lcd.print("      ");
-
-  lcd.setCursor(0, 2);
-  lcd.print("     ");
-  lcd.print(clock.month, DEC);
-  lcd.print("/");
-  lcd.print(clock.dayOfMonth, DEC);
-  lcd.print("/");
-  lcd.print(clock.year + 2000, DEC);
-  lcd.print("     ");
-
-  lcd.setCursor(0, 3);
-  lcd.print("< *    ");
-  lcd.print(clock.dayOfMonth);
-  lcd.print("*");
-
-  switch (clock.dayOfWeek) // Friendly printout the weekday
-  {
-  case MON:
-    lcd.print("MON");
-    break;
-  case TUE:
-    lcd.print("TUE");
-    break;
-  case WED:
-    lcd.print("WED");
-    break;
-  case THU:
-    lcd.print("THU");
-    break;
-  case FRI:
-    lcd.print("FRI");
-    break;
-  case SAT:
-    lcd.print("SAT");
-    break;
-  case SUN:
-    lcd.print("SUN");
-    break;
-  }
-  lcd.print("    # >");
 }
 
 void instructionsView() {
@@ -177,25 +196,188 @@ void instructionsView() {
   lcd.setCursor(0, 2);
   lcd.print("   Go right with #");
   lcd.setCursor(0, 3);
-  lcd.print(" Tap any key to go!");
+  lcd.print("   Press A to go!");
 
   // wait for the user to press a key
-  while (true) {
-    char custom_key = customKeypad.getKey();
+  // while (true) {
+  //   char pass_char = custom_keypad.getKey();
 
-    if (custom_key) {
-      break;
-    }
-  }
+  //   if (pass_char) {
+  //     return pass_char;
+  //   }
+  // }
 }
 
 void stopTimer() {}
 
-void countdownTimer() {
+char countdownTimer() {
   lcd.clear();
   lcd.home();
 
   lcd.print("  Countdown timer:  ");
   lcd.setCursor(0, 1);
-  lcd.print()
+  lcd.print(countdown_time);
+
+  while (true) {
+    char exit_char = custom_keypad.getKey();
+
+    if (exit_char) {
+      return exit_char;
+    }
+  }
+}
+
+char readEeprom() {
+  int eeprom_message_length = 0;
+
+  lcd.clear();
+  lcd.home();
+  lcd.print("      EEPROM:");
+
+  for (unsigned int i = 0; i < EEPROM.length(); i++) {
+    int byte = EEPROM.read(i);
+    if (byte == 255) {
+      break;
+    }
+    eeprom_message_length++;
+  }
+
+  lcd.setCursor(0, 1);
+
+  // Read chars from EEPROM and print them
+  for (int i = 0; i < eeprom_message_length; i++) {
+    char ch = EEPROM.read(i);
+
+    if (i == 9) {
+      lcd.setCursor(0, 2);
+    }
+    Serial.print(ch);
+    lcd.print(ch);
+  }
+  Serial.println();
+
+  while (true) {
+    char exit_char = custom_keypad.getKey();
+    if (exit_char) {
+      return exit_char;
+    }
+  }
+}
+
+char setupScreen() {
+  // TODO: int dont work, change to char and do a check func
+  int ten_mins, mins, ten_secs, secs;
+
+  lcd.clear();
+  lcd.home();
+  lcd.print("Set countdown timer:");
+
+  lcd.setCursor(0, 1);
+  lcd.print("Give tens minutes:");
+
+  // tens of minutes
+  while (true) {
+    ten_mins = custom_keypad.getKey();
+
+    lcd.setCursor(0, 3);
+    lcd.print("Timer: ");
+    lcd.print("00:00");
+
+    lcd.setCursor(0, 3);
+    lcd.print("Timer: ");
+    lcd.print(" 0:00");
+
+    if (ten_mins) {
+      lcd.setCursor(0, 3);
+      lcd.print("Timer: ");
+      lcd.print(ten_mins);
+      lcd.print("0:00");
+      break;
+    }
+  }
+
+  // minutes
+  while (true) {
+    mins = custom_keypad.getKey();
+
+    lcd.setCursor(0, 3);
+    lcd.print("Timer: ");
+    lcd.print(ten_mins);
+    lcd.print("0:00");
+
+    lcd.setCursor(0, 3);
+    lcd.print("Timer: ");
+    lcd.print(ten_mins);
+    lcd.print(" :00");
+
+    if (mins) {
+      lcd.setCursor(0, 3);
+      lcd.print("Timer: ");
+      lcd.print(ten_mins);
+      lcd.print(mins);
+      lcd.print(":00");
+      break;
+    }
+  }
+
+  // tens seconds
+  while (true) {
+    mins = custom_keypad.getKey();
+
+    lcd.setCursor(0, 3);
+    lcd.print("Timer: ");
+    lcd.print(ten_mins);
+    lcd.print("0:00");
+
+    lcd.setCursor(0, 3);
+    lcd.print("Timer: ");
+    lcd.print(ten_mins);
+    lcd.print(" :00");
+
+    if (mins) {
+      lcd.setCursor(0, 3);
+      lcd.print("Timer: ");
+      lcd.print(ten_mins);
+      lcd.print(mins);
+      lcd.print(":00");
+      break;
+    }
+  }
+
+  // seconds
+  while (true) {
+    mins = custom_keypad.getKey();
+
+    lcd.setCursor(0, 3);
+    lcd.print("Timer: ");
+    lcd.print(ten_mins);
+    lcd.print("0:00");
+
+    lcd.setCursor(0, 3);
+    lcd.print("Timer: ");
+    lcd.print(ten_mins);
+    lcd.print(" :00");
+
+    if (mins) {
+      lcd.setCursor(0, 3);
+      lcd.print("Timer: ");
+      lcd.print(ten_mins);
+      lcd.print(mins);
+      lcd.print(":00");
+      break;
+    }
+  }
+
+  // calculate the time in seconds
+  countdown_time += ten_mins * 10 * 60;
+  countdown_time += mins * 60;
+  countdown_time += ten_secs * 10;
+  countdown_time += secs;
+
+  while (true) {
+    char exit_char = custom_keypad.getKey();
+    if (exit_char) {
+      return exit_char;
+    }
+  }
 }
