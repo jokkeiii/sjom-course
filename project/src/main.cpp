@@ -12,6 +12,7 @@ PCD85063TP clock;
 
 const byte ROWS = 4; // four rows
 const byte COLS = 4; // four columns
+
 // define the symbols on the buttons of the keypads
 char hexaKeys[ROWS][COLS] = {{'1', '2', '3', 'A'},
                              {'4', '5', '6', 'B'},
@@ -31,13 +32,20 @@ byte colPins[COLS] = {12, 11, 10, 9}; // connect to the column pinouts of the
 Keypad customKeypad =
     Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
 
+int touch_sensor_pin = 2;
+
 void instructionsView();
 void lcdPrintTime();
+void stopTimer();
 
 void setup() {
   Serial.begin(115200);
   // watchdog not needed (yet)
   wdt_disable();
+
+  // touch sensor ISR
+  pinMode(touch_sensor_pin, INPUT);
+  attachInterrupt(digitalPinToInterrupt(touch_sensor_pin), stopTimer, RISING);
 
   lcd.init(); // initialize the lcd
   lcd.clear();
@@ -45,14 +53,16 @@ void setup() {
   // lcd.backlight();
   clock.begin();
 
-  // set current correct time once
+  // set current correct time,
+  // if the module has a battery, this is a one time operation
   // clock.stopClock();
-  // clock.fillByYMD(2023, 11, 21); // Jan 19,2013
-  // clock.fillByHMS(11, 27, 00);   // 15:28 30"
-  // clock.fillDayOfWeek(TUE);      // Saturday
+  // clock.fillByYMD(2023, 11, 28); // yyyy:mm:dd
+  // clock.fillByHMS(11, 03, 00);   // hh:mm:ss
+  // clock.fillDayOfWeek(TUE);      // 3 letter weekday
   // clock.setTime();               // write time to the RTC chip
   // clock.startClock();
-  clock.setcalibration(1, 32767.2); // Setting offset by clock frequency
+  // Setting offset by module's clock frequency, 32.768 kHz
+  // clock.setcalibration(1, 32768);
 
   uint8_t ret = clock.calibratBySeconds(0, -0.000041);
 
@@ -79,7 +89,9 @@ void loop() {
   case '*':
     Serial.println("Screen change!");
     break;
-
+  case '#':
+    countdownTimer();
+    break;
   default:
     lcd.setCursor(0, 0);
     lcd.print(" Time now from RTC: ");
@@ -159,13 +171,13 @@ void lcdPrintTime() {
 void instructionsView() {
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("Hello!");
+  lcd.print("    Hello there!");
   lcd.setCursor(0, 1);
-  lcd.print("Clock ready to go!");
+  lcd.print("   Go left with *");
   lcd.setCursor(0, 2);
-  lcd.print("Navigate with keys");
+  lcd.print("   Go right with #");
   lcd.setCursor(0, 3);
-  lcd.print("Tap key to go");
+  lcd.print(" Tap any key to go!");
 
   // wait for the user to press a key
   while (true) {
@@ -175,4 +187,15 @@ void instructionsView() {
       break;
     }
   }
+}
+
+void stopTimer() {}
+
+void countdownTimer() {
+  lcd.clear();
+  lcd.home();
+
+  lcd.print("  Countdown timer:  ");
+  lcd.setCursor(0, 1);
+  lcd.print()
 }

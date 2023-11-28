@@ -51,3 +51,9 @@ Keypad functions:
 3. Timer alarm
    1. Vibration motor
    2. Capasitive touch sensor
+
+**Käytössä olevat lohkot:**
+
+1. TWI
+2. Watchdog
+3. 
