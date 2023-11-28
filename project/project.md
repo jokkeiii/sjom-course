@@ -56,4 +56,4 @@ Keypad functions:
 
 1. TWI
 2. Watchdog
-3. 
+3. EEPROM

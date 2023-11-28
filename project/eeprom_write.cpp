@@ -1,6 +1,6 @@
 #include <EEPROM.h>
 
-String eepromMessage = "Tekijät: Arif, Henri ja Joakim";
+String eepromMessage = "Made by: Arif, Henri ja Jokke";
 int address = 0;
 
 void setup() {
