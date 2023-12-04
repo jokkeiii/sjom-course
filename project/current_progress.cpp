@@ -51,6 +51,8 @@ void setup() {
   wdt_disable();
 
   Timer1.attachInterrupt(timerCallback);
+  // Set D13 (PB5) as an output
+  DDRB |= (1 << DDB5);
 
   lcd.init();
   lcd.clear();
@@ -72,12 +74,16 @@ void setup() {
   uint8_t ret = clock.calibratBySeconds(0, -0.000041);
 
   // if calibration failed, do a reset
-  if (ret) {
+  if (ret != 255) {
     Serial.println("RTC calibrated successfully!");
   } else {
     Serial.println("RTC calibration failed!");
+
+    // Set D13 high
+    PORTB |= (1 << PORTB5);
+
     // enable watchdog with 15ms
-    wdt_enable(WDTO_15MS);
+    wdt_enable(WDTO_2S);
     // infinite loop to trigger the watchdog
     while (1) {
     };
