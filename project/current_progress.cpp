@@ -2,7 +2,6 @@
 #include <EEPROM.h>
 #include <Keypad.h>
 #include <LiquidCrystal_I2C.h>
-#include <Wire.h>
 #include <avr/wdt.h>
 
 // LCD object
@@ -36,9 +35,12 @@ Keypad custom_keypad =
 int eeprom_address = 0;
 char custom_key;
 
+enum VIEWS { INSTRUCTIONS, MAIN_CLOCK, EEPROM_VIEW };
+VIEWS current_view = INSTRUCTIONS;
+
 void instructionsView();
-char lcdPrintTime();
-char readEeprom();
+void lcdPrintTime();
+void readEeprom();
 
 void setup() {
   Serial.begin(115200);
@@ -77,99 +79,25 @@ void setup() {
   }
 
   // show instruction screen
-  // custom_key = instructionsView();
   instructionsView();
 }
 
 void loop() {
-  switch (custom_key) {
-  case 'A':
-    custom_key = lcdPrintTime();
-    break;
-  case 'D':
-    custom_key = readEeprom();
-    break;
-  default:
-    custom_key = custom_keypad.getKey();
-    break;
-  }
-}
+  custom_key = custom_keypad.getKey();
 
-// Function: Display time on the lcd
-char lcdPrintTime() {
-  while (true) {
-    lcd.setCursor(0, 0);
-    lcd.print(" Time now from RTC: ");
-
-    clock.getTime();
-
-    lcd.setCursor(0, 1);
-    lcd.print("      ");
-    // leading zero if number is under 10
-    if (clock.hour < 10) {
-      lcd.print("0");
-    }
-    lcd.print(clock.hour, DEC);
-    lcd.print(":");
-
-    // leading zero if number is under 10
-    if (clock.minute < 10) {
-      lcd.print("0");
-    }
-    lcd.print(clock.minute, DEC);
-    lcd.print(":");
-
-    // leading zero if number is under 10
-    if (clock.second < 10) {
-      lcd.print("0");
-    }
-    lcd.print(clock.second, DEC);
-    lcd.print("      ");
-
-    lcd.setCursor(0, 2);
-    lcd.print("     ");
-    lcd.print(clock.month, DEC);
-    lcd.print("/");
-    lcd.print(clock.dayOfMonth, DEC);
-    lcd.print("/");
-    lcd.print(clock.year + 2000, DEC);
-    lcd.print("     ");
-
-    lcd.setCursor(0, 3);
-    lcd.print("< D    ");
-    lcd.print(clock.dayOfMonth);
-    lcd.print("*");
-
-    switch (clock.dayOfWeek) // Friendly printout the weekday
-    {
-    case MON:
-      lcd.print("MON");
-      break;
-    case TUE:
-      lcd.print("TUE");
-      break;
-    case WED:
-      lcd.print("WED");
-      break;
-    case THU:
-      lcd.print("THU");
-      break;
-    case FRI:
-      lcd.print("FRI");
-      break;
-    case SAT:
-      lcd.print("SAT");
-      break;
-    case SUN:
-      lcd.print("SUN");
-      break;
-    }
-    lcd.print("    B >");
-
-    char exit_char = custom_keypad.getKey();
-    if (exit_char) {
-      return exit_char;
-    }
+  if (custom_key == 'A') {
+    lcd.clear();
+    current_view = MAIN_CLOCK;
+    lcdPrintTime();
+  } else if (custom_key == 'B') {
+    current_view = EEPROM_VIEW;
+    readEeprom();
+  } else if (current_view == MAIN_CLOCK) {
+    current_view = MAIN_CLOCK;
+    lcdPrintTime();
+  } else if (custom_key == '#') {
+    current_view = INSTRUCTIONS;
+    instructionsView();
   }
 }
 
@@ -178,23 +106,87 @@ void instructionsView() {
   lcd.setCursor(0, 0);
   lcd.print("    Hello there!");
   lcd.setCursor(0, 1);
-  lcd.print("   Go left with *");
+  lcd.print(" Main clock with A");
   lcd.setCursor(0, 2);
-  lcd.print("   Go right with #");
+  lcd.print("    EEPROM with B");
   lcd.setCursor(0, 3);
-  lcd.print("   Press A to go!");
-
-  // wait for the user to press a key
-  // while (true) {
-  //   char pass_char = custom_keypad.getKey();
-
-  //   if (pass_char) {
-  //     return pass_char;
-  //   }
-  // }
+  lcd.print("  Press key to go!");
 }
 
-char readEeprom() {
+// Function: Display time on the lcd
+void lcdPrintTime() {
+  lcd.setCursor(0, 0);
+  lcd.print(" Time now from RTC: ");
+
+  clock.getTime();
+
+  lcd.setCursor(0, 1);
+  lcd.print("      ");
+  // leading zero if number is under 10
+  if (clock.hour < 10) {
+    lcd.print("0");
+  }
+  lcd.print(clock.hour, DEC);
+  lcd.print(":");
+
+  // leading zero if number is under 10
+  if (clock.minute < 10) {
+    lcd.print("0");
+  }
+  lcd.print(clock.minute, DEC);
+  lcd.print(":");
+
+  // leading zero if number is under 10
+  if (clock.second < 10) {
+    lcd.print("0");
+  }
+  lcd.print(clock.second, DEC);
+  lcd.print("      ");
+
+  lcd.setCursor(0, 2);
+  lcd.print("     ");
+  lcd.print(clock.month, DEC);
+  lcd.print("/");
+  lcd.print(clock.dayOfMonth, DEC);
+  lcd.print("/");
+  lcd.print(clock.year + 2000, DEC);
+  lcd.print("     ");
+
+  lcd.setCursor(0, 3);
+  lcd.print("       ");
+  if (clock.dayOfMonth < 10) {
+    lcd.print("0");
+  }
+  lcd.print(clock.dayOfMonth);
+  lcd.print("*");
+
+  switch (clock.dayOfWeek) // Friendly printout the weekday
+  {
+  case MON:
+    lcd.print("MON");
+    break;
+  case TUE:
+    lcd.print("TUE");
+    break;
+  case WED:
+    lcd.print("WED");
+    break;
+  case THU:
+    lcd.print("THU");
+    break;
+  case FRI:
+    lcd.print("FRI");
+    break;
+  case SAT:
+    lcd.print("SAT");
+    break;
+  case SUN:
+    lcd.print("SUN");
+    break;
+  }
+}
+
+void readEeprom() {
   int eeprom_message_length = 0;
 
   lcd.clear();
@@ -218,15 +210,6 @@ char readEeprom() {
     if (i == 9) {
       lcd.setCursor(0, 2);
     }
-    Serial.print(ch);
     lcd.print(ch);
-  }
-  Serial.println();
-
-  while (true) {
-    char exit_char = custom_keypad.getKey();
-    if (exit_char) {
-      return exit_char;
-    }
   }
 }
