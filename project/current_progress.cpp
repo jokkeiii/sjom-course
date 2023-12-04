@@ -3,6 +3,7 @@
 #include <Keypad.h>
 #include <LiquidCrystal_I2C.h>
 #include <avr/wdt.h>
+#include <TimerOne.h>
 
 // LCD object
 LiquidCrystal_I2C lcd(0x27, 16, 4); // I2C address 0x27, 16 column and 2 rows
@@ -34,6 +35,7 @@ Keypad custom_keypad =
 
 int eeprom_address = 0;
 char custom_key;
+volatile bool timerFlag = false;
 
 enum VIEWS { INSTRUCTIONS, MAIN_CLOCK, EEPROM_VIEW };
 VIEWS current_view = INSTRUCTIONS;
@@ -211,5 +213,16 @@ void readEeprom() {
       lcd.setCursor(0, 2);
     }
     lcd.print(ch);
+  }
+  Timer1.initialize(10000000);  // 10 seconds in microseconds
+  Timer1.attachInterrupt(timerCallback);
+  timerFlag = true;
+}
+
+void timerCallback() {
+  Timer1.stop();
+  timerFlag = false;
+  if (current_view == EEPROM_VIEW) {
+    instructionsView();
   }
 }
