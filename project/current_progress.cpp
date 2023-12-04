@@ -33,25 +33,17 @@ byte colPins[COLS] = {12, 11, 10, 9}; // connect to the column pinouts of the
 Keypad custom_keypad =
     Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
 
-int touch_sensor_pin = 2, eeprom_address = 0;
+int eeprom_address = 0;
 char custom_key;
-int countdown_time = 0;
 
 void instructionsView();
 char lcdPrintTime();
-void stopTimer();
-char countdownTimer();
 char readEeprom();
-char setupScreen();
 
 void setup() {
   Serial.begin(115200);
   // watchdog not needed (yet)
   wdt_disable();
-
-  // touch sensor ISR
-  pinMode(touch_sensor_pin, INPUT);
-  attachInterrupt(digitalPinToInterrupt(touch_sensor_pin), stopTimer, RISING);
 
   lcd.init(); // initialize the lcd
   lcd.clear();
@@ -93,12 +85,6 @@ void loop() {
   switch (custom_key) {
   case 'A':
     custom_key = lcdPrintTime();
-    break;
-  case 'B':
-    custom_key = countdownTimer();
-    break;
-  case 'C':
-    custom_key = setupScreen();
     break;
   case 'D':
     custom_key = readEeprom();
@@ -208,25 +194,6 @@ void instructionsView() {
   // }
 }
 
-void stopTimer() {}
-
-char countdownTimer() {
-  lcd.clear();
-  lcd.home();
-
-  lcd.print("  Countdown timer:  ");
-  lcd.setCursor(0, 1);
-  lcd.print(countdown_time);
-
-  while (true) {
-    char exit_char = custom_keypad.getKey();
-
-    if (exit_char) {
-      return exit_char;
-    }
-  }
-}
-
 char readEeprom() {
   int eeprom_message_length = 0;
 
@@ -255,124 +222,6 @@ char readEeprom() {
     lcd.print(ch);
   }
   Serial.println();
-
-  while (true) {
-    char exit_char = custom_keypad.getKey();
-    if (exit_char) {
-      return exit_char;
-    }
-  }
-}
-
-char setupScreen() {
-  // TODO: int dont work, change to char and do a check func
-  int ten_mins, mins, ten_secs, secs;
-
-  lcd.clear();
-  lcd.home();
-  lcd.print("Set countdown timer:");
-
-  lcd.setCursor(0, 1);
-  lcd.print("Give tens minutes:");
-
-  // tens of minutes
-  while (true) {
-    ten_mins = custom_keypad.getKey();
-
-    lcd.setCursor(0, 3);
-    lcd.print("Timer: ");
-    lcd.print("00:00");
-
-    lcd.setCursor(0, 3);
-    lcd.print("Timer: ");
-    lcd.print(" 0:00");
-
-    if (ten_mins) {
-      lcd.setCursor(0, 3);
-      lcd.print("Timer: ");
-      lcd.print(ten_mins);
-      lcd.print("0:00");
-      break;
-    }
-  }
-
-  // minutes
-  while (true) {
-    mins = custom_keypad.getKey();
-
-    lcd.setCursor(0, 3);
-    lcd.print("Timer: ");
-    lcd.print(ten_mins);
-    lcd.print("0:00");
-
-    lcd.setCursor(0, 3);
-    lcd.print("Timer: ");
-    lcd.print(ten_mins);
-    lcd.print(" :00");
-
-    if (mins) {
-      lcd.setCursor(0, 3);
-      lcd.print("Timer: ");
-      lcd.print(ten_mins);
-      lcd.print(mins);
-      lcd.print(":00");
-      break;
-    }
-  }
-
-  // tens seconds
-  while (true) {
-    mins = custom_keypad.getKey();
-
-    lcd.setCursor(0, 3);
-    lcd.print("Timer: ");
-    lcd.print(ten_mins);
-    lcd.print("0:00");
-
-    lcd.setCursor(0, 3);
-    lcd.print("Timer: ");
-    lcd.print(ten_mins);
-    lcd.print(" :00");
-
-    if (mins) {
-      lcd.setCursor(0, 3);
-      lcd.print("Timer: ");
-      lcd.print(ten_mins);
-      lcd.print(mins);
-      lcd.print(":00");
-      break;
-    }
-  }
-
-  // seconds
-  while (true) {
-    mins = custom_keypad.getKey();
-
-    lcd.setCursor(0, 3);
-    lcd.print("Timer: ");
-    lcd.print(ten_mins);
-    lcd.print("0:00");
-
-    lcd.setCursor(0, 3);
-    lcd.print("Timer: ");
-    lcd.print(ten_mins);
-    lcd.print(" :00");
-
-    if (mins) {
-      lcd.setCursor(0, 3);
-      lcd.print("Timer: ");
-      lcd.print(ten_mins);
-      lcd.print(mins);
-      lcd.print(":00");
-      break;
-    }
-  }
-
-  // calculate the time in seconds
-  countdown_time += ten_mins * 10 * 60;
-  countdown_time += mins * 60;
-  countdown_time += ten_secs * 10;
-  countdown_time += secs;
 
   while (true) {
     char exit_char = custom_keypad.getKey();
