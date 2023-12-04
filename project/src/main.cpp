@@ -2,6 +2,7 @@
 #include <EEPROM.h>
 #include <Keypad.h>
 #include <LiquidCrystal_I2C.h>
+#include <TimerOne.h>
 #include <avr/wdt.h>
 
 // LCD object
@@ -34,6 +35,7 @@ Keypad custom_keypad =
 
 int eeprom_address = 0;
 char custom_key;
+volatile bool timer_flag = false;
 
 enum VIEWS { INSTRUCTIONS, MAIN_CLOCK, EEPROM_VIEW };
 VIEWS current_view = INSTRUCTIONS;
@@ -41,13 +43,18 @@ VIEWS current_view = INSTRUCTIONS;
 void instructionsView();
 void lcdPrintTime();
 void readEeprom();
+void timerCallback();
 
 void setup() {
   Serial.begin(115200);
   // watchdog not needed (yet)
   wdt_disable();
 
-  lcd.init(); // initialize the lcd
+  Timer1.attachInterrupt(timerCallback);
+  // Set D13 (PB5) as an output
+  DDRB |= (1 << DDB5);
+
+  lcd.init();
   lcd.clear();
   // backlight draws a lot of power so use with caution
   // lcd.backlight();
@@ -66,13 +73,18 @@ void setup() {
 
   uint8_t ret = clock.calibratBySeconds(0, -0.000041);
 
+  // enable watchdog with 2s
+  wdt_enable(WDTO_2S);
+
   // if calibration failed, do a reset
-  if (ret) {
+  if (ret != 255) {
     Serial.println("RTC calibrated successfully!");
   } else {
     Serial.println("RTC calibration failed!");
-    // enable watchdog with 15ms
-    wdt_enable(WDTO_15MS);
+
+    // Set D13 high
+    PORTB |= (1 << PORTB5);
+
     // infinite loop to trigger the watchdog
     while (1) {
     };
@@ -83,8 +95,11 @@ void setup() {
 }
 
 void loop() {
-  custom_key = custom_keypad.getKey();
+  // reset the watchdog
+  wdt_reset();
 
+  custom_key = custom_keypad.getKey();
+  // Serial.println(custom_key);
   if (custom_key == 'A') {
     lcd.clear();
     current_view = MAIN_CLOCK;
@@ -92,15 +107,20 @@ void loop() {
   } else if (custom_key == 'B') {
     current_view = EEPROM_VIEW;
     readEeprom();
+  } else if (custom_key == '#') {
+    current_view = INSTRUCTIONS;
+    instructionsView();
   } else if (current_view == MAIN_CLOCK) {
     current_view = MAIN_CLOCK;
     lcdPrintTime();
-  } else if (custom_key == '#') {
+  } else if (!timer_flag && current_view != INSTRUCTIONS) {
+    lcd.clear();
     current_view = INSTRUCTIONS;
     instructionsView();
   }
 }
 
+// startup view
 void instructionsView() {
   lcd.clear();
   lcd.setCursor(0, 0);
@@ -113,7 +133,7 @@ void instructionsView() {
   lcd.print("  Press key to go!");
 }
 
-// Function: Display time on the lcd
+// display current time on the lcd
 void lcdPrintTime() {
   lcd.setCursor(0, 0);
   lcd.print(" Time now from RTC: ");
@@ -186,6 +206,7 @@ void lcdPrintTime() {
   }
 }
 
+// read EEPROM and write it to the lcd
 void readEeprom() {
   int eeprom_message_length = 0;
 
@@ -212,4 +233,13 @@ void readEeprom() {
     }
     lcd.print(ch);
   }
+
+  Timer1.initialize(3000000); // 10 seconds in microseconds
+  timer_flag = true;
+}
+
+// timer1 ISR callback
+void timerCallback() {
+  Timer1.stop();
+  timer_flag = false;
 }

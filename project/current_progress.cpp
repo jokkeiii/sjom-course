@@ -73,6 +73,9 @@ void setup() {
 
   uint8_t ret = clock.calibratBySeconds(0, -0.000041);
 
+  // enable watchdog with 2s
+  wdt_enable(WDTO_2S);
+
   // if calibration failed, do a reset
   if (ret != 255) {
     Serial.println("RTC calibrated successfully!");
@@ -82,8 +85,6 @@ void setup() {
     // Set D13 high
     PORTB |= (1 << PORTB5);
 
-    // enable watchdog with 15ms
-    wdt_enable(WDTO_2S);
     // infinite loop to trigger the watchdog
     while (1) {
     };
@@ -94,6 +95,9 @@ void setup() {
 }
 
 void loop() {
+  // reset the watchdog
+  wdt_reset();
+
   custom_key = custom_keypad.getKey();
   // Serial.println(custom_key);
   if (custom_key == 'A') {
