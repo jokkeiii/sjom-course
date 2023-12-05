@@ -33,13 +33,17 @@ byte colPins[COLS] = {12, 11, 10, 9}; // connect to the column pinouts of the
 Keypad custom_keypad =
     Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
 
+// start address for EEPROM reading
 int eeprom_address = 0;
+// holds the keypad character given
 char custom_key;
 volatile bool timer_flag = false;
 
+// all the possible views and current view on the lcd
 enum VIEWS { INSTRUCTIONS, MAIN_CLOCK, EEPROM_VIEW };
 VIEWS current_view = INSTRUCTIONS;
 
+// function prototypes
 void instructionsView();
 void lcdPrintTime();
 void readEeprom();
@@ -58,11 +62,11 @@ void setup() {
   lcd.clear();
   // backlight draws a lot of power so use with caution
   // lcd.backlight();
+
   clock.begin();
 
   // set current correct time,
-  // if the module has a battery, this is a one time operation
-
+  // if the module has a battery, this is a one time operation,
   // clock.stopClock();
   // clock.fillByYMD(2023, 12, 5); // yyyy:mm:dd
   // clock.fillByHMS(8, 29, 40);   // hh:mm:ss
@@ -84,7 +88,7 @@ void setup() {
   } else {
     Serial.println("RTC calibration failed!");
 
-    // Set D13 high
+    // set D13 high, (error led)
     PORTB |= (1 << PORTB5);
 
     // infinite loop to trigger the watchdog
@@ -92,7 +96,7 @@ void setup() {
     };
   }
 
-  // show instruction screen
+  // show startup view
   instructionsView();
 }
 
@@ -101,7 +105,7 @@ void loop() {
   wdt_reset();
 
   custom_key = custom_keypad.getKey();
-  // Serial.println(custom_key);
+
   if (custom_key == 'A') {
     lcd.clear();
     current_view = MAIN_CLOCK;
@@ -112,9 +116,13 @@ void loop() {
   } else if (custom_key == '#') {
     current_view = INSTRUCTIONS;
     instructionsView();
+
+    // loop to main clock view until another view is selected
   } else if (current_view == MAIN_CLOCK) {
     current_view = MAIN_CLOCK;
     lcdPrintTime();
+
+    // when ISR is called, loop to startup view until another view is selected
   } else if (!timer_flag && current_view != INSTRUCTIONS) {
     lcd.clear();
     current_view = INSTRUCTIONS;
@@ -185,7 +193,7 @@ void lcdPrintTime() {
   lcd.print(clock.dayOfMonth);
   lcd.print("*");
 
-  switch (clock.dayOfWeek) // Friendly printout the weekday
+  switch (clock.dayOfWeek) // friendly printout the weekday
   {
   case MON:
     lcd.print("MON");
@@ -211,7 +219,7 @@ void lcdPrintTime() {
   }
 }
 
-// read EEPROM and write it to the lcd
+// read EEPROM and print it to the lcd
 void readEeprom() {
   int eeprom_message_length = 0;
 
@@ -219,6 +227,7 @@ void readEeprom() {
   lcd.home();
   lcd.print("      EEPROM:");
 
+  // check what bytes in EEPROM contain data
   for (unsigned int i = 0; i < EEPROM.length(); i++) {
     int byte = EEPROM.read(i);
     if (byte == 255) {
@@ -229,7 +238,7 @@ void readEeprom() {
 
   lcd.setCursor(0, 1);
 
-  // Read chars from EEPROM and print them
+  // read chars from EEPROM and print them
   for (int i = 0; i < eeprom_message_length; i++) {
     char ch = EEPROM.read(i);
 
@@ -239,6 +248,7 @@ void readEeprom() {
     lcd.print(ch);
   }
 
+  // 3 second countdown until interrupt and back to startup view
   Timer1.initialize(3000000); // 10 seconds in microseconds
   timer_flag = true;
 }
