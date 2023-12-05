@@ -62,12 +62,14 @@ void setup() {
 
   // set current correct time,
   // if the module has a battery, this is a one time operation
+
   // clock.stopClock();
-  // clock.fillByYMD(2023, 11, 28); // yyyy:mm:dd
-  // clock.fillByHMS(11, 03, 00);   // hh:mm:ss
-  // clock.fillDayOfWeek(TUE);      // 3 letter weekday
-  // clock.setTime();               // write time to the RTC chip
+  // clock.fillByYMD(2023, 12, 5); // yyyy:mm:dd
+  // clock.fillByHMS(8, 29, 40);   // hh:mm:ss
+  // clock.fillDayOfWeek(TUE);     // 3 letter weekday
+  // clock.setTime();              // write time to the RTC chip
   // clock.startClock();
+
   // Setting offset by module's clock frequency, 32.768 kHz
   // clock.setcalibration(1, 32768);
 
@@ -165,9 +167,12 @@ void lcdPrintTime() {
 
   lcd.setCursor(0, 2);
   lcd.print("     ");
-  lcd.print(clock.month, DEC);
-  lcd.print("/");
+  if (clock.dayOfMonth < 10) {
+    lcd.print("0");
+  }
   lcd.print(clock.dayOfMonth, DEC);
+  lcd.print("/");
+  lcd.print(clock.month, DEC);
   lcd.print("/");
   lcd.print(clock.year + 2000, DEC);
   lcd.print("     ");
